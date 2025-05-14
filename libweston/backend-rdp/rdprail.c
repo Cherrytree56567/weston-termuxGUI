@@ -343,7 +343,7 @@ rail_client_SnapArrange_callback(bool freeOnly, void *arg)
 	assert_compositor_thread(b);
 
 	surface = NULL;
-	if (!freeOnly)	
+	if (!freeOnly)
 		surface = rdp_id_manager_lookup(&peer_ctx->windowId,
 						snap->windowId);
 	if (surface) {
@@ -1483,8 +1483,6 @@ rdp_showstate_to_string(uint32_t showstate)
 	}
 }
 
-static int next_monitor_id = 0;
-
 static void
 rdp_rail_create_window(struct wl_listener *listener, void *data)
 {
@@ -1568,8 +1566,6 @@ rdp_rail_create_window(struct wl_listener *listener, void *data)
 		return;
 	}
 	rail_state->window_id = window_id;
-	rail_state->monitor_id = next_monitor_id++;
-	rdp_backend_update_monitor_layout(b); // Update monitor layout right after assigning ID
 	/* Once this surface is inserted to hash table, we want to be notified for destroy */
 	assert(!rail_state->destroy_listener.notify);
 	rail_state->destroy_listener.notify = rdp_rail_destroy_window;
