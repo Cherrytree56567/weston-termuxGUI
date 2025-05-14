@@ -297,11 +297,36 @@ bool
 handle_adjust_monitor_layout(freerdp_peer *client, int monitor_count, rdpMonitor *monitors)
 {
 	RdpPeerContext *peerCtx = (RdpPeerContext *)client->context;
+	struct rdp_backend *b = peerCtx->rdpBackend;
 
 	if (!disp_monitor_sanity_check_layout(peerCtx, monitors, monitor_count))
 		return true;
 
 	disp_start_monitor_layout_change(client, monitors, monitor_count);
+
+	/* Add this block to resize Wayland surfaces */
+	for (int i = 0; i < monitor_count; i++) {
+		int mon_id = i;  // Assuming monitor_id matches RAIL surface's monitor_id
+		int width = monitors[i].width;
+		int height = monitors[i].height;
+
+		struct weston_surface *surface;
+		wl_list_for_each(surface, &b->compositor->surface_list, link) {
+			if (!surface->backend_state)
+				continue;
+
+			struct weston_surface_rail_state *rail_state = surface->backend_state;
+			if (rail_state->monitor_id == mon_id) {
+				struct weston_view *view = weston_surface_get_primary_view(surface);
+				if (view) {
+					weston_view_set_size(view, width, height);
+					weston_view_geometry_dirty(view);
+					weston_surface_damage(surface);
+				}
+				break;
+			}
+		}
+	}
 
 	return true;
 }
