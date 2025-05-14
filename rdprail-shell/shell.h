@@ -73,6 +73,7 @@ struct shell_output {
 
 struct weston_desktop;
 struct desktop_shell {
+	int next_output_id;
 	struct weston_compositor *compositor;
 	struct weston_desktop *desktop;
 	const struct weston_xwayland_surface_api *xwayland_surface_api;
@@ -196,6 +197,8 @@ shell_blend_overlay_icon(struct desktop_shell *shell,
 
 void
 shell_rdp_debug_print(struct weston_log_scope *scope, bool cont, char *fmt, ...);
+
+struct weston_output *assign_unique_output(struct desktop_shell *shell);	
 
 // app-list.c
 void app_list_init(struct desktop_shell *shell);

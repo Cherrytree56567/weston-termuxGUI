@@ -1778,10 +1778,8 @@ shell_surface_set_output(struct shell_surface *shsurf,
 	   check whether the output is available */
 	if (output)
 		shsurf->output = output;
-	else if (es->output)
-		shsurf->output = es->output;
 	else
-		shsurf->output = get_default_output(es->compositor);
+		shsurf->output = assign_unique_output(shsurf->shell);
 
 	if (shsurf->output_destroy_listener.notify) {
 		wl_list_remove(&shsurf->output_destroy_listener.link);
@@ -4927,6 +4925,34 @@ static const struct weston_rdprail_shell_api rdprail_shell_api = {
 	.get_window_geometry = shell_backend_get_window_geometry,
 	.request_window_minmax_info = shell_send_minmax_info,
 };
+
+struct weston_output *
+assign_unique_output(struct desktop_shell *shell)
+{
+	struct weston_output *output;
+	int index = 0;
+	wl_list_for_each(output, &shell->compositor->output_list, link) {
+		if (index == shell->next_output_id) {
+			shell->next_output_id++;
+			return output;
+		}
+		index++;
+	}
+
+	// If not enough outputs, just wrap around
+	shell->next_output_id = 0;
+
+	wl_list_for_each(output, &shell->compositor->output_list, link) {
+		if (index == shell->next_output_id) {
+			shell->next_output_id++;
+			return output;
+		}
+		index++;
+	}
+
+	// Fallback: return default output
+	return get_default_output(shell->compositor);
+}
 
 WL_EXPORT int
 wet_shell_init(struct weston_compositor *ec,
